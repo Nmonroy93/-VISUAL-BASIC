@@ -1,0 +1,90 @@
+Sub guardar_usuario()
+        Try
+            Dim computador_usuario As String
+            Dim usuario As String
+            usuario = txtUsername.Text
+            ' Get Host Name / Get Computer Name
+            computador_usuario = Environ$("computername")
+            
+            Dim ip_ As String
+            ip_ = ""
+           
+            ip_ = GetIP()
+            If ip_ Is Nothing Then
+                ip_ = GetLocalIP()
+            ElseIf ip_ = "" Then
+                ip_ = GetLocalIP()
+            End If
+            
+            'MsgBox(GetLocalIP())
+            
+            Dim Conn2 As New SqlConnection(ConfigurationManager.ConnectionStrings("CONEXION").ConnectionString)
+          
+            Conn2.Open()
+            Dim command As Object = Conn2.CreateCommand
+            command.commandText = "sp_c_guardar_login"
+            Command.commandType = CommandType.StoredProcedure
+            command.Parameters.Add("@usuario", SqlDbType.VarChar)
+            command.Parameters.Add("@computador", SqlDbType.VarChar)
+            command.Parameters.Add("@ip", SqlDbType.VarChar)
+            command.Parameters("@usuario").Value = usuario
+            command.Parameters("@computador").Value = computador_usuario
+            command.Parameters("@ip").Value = ip_
+            
+            Command.ExecuteNonQuery()
+            Conn2.Close()
+            
+            
+            
+        Catch ex As Exception
+           
+        End Try
+
+        
+    End Sub
+    
+    Public Function GetLocalIP() As String
+        Try
+            Dim _IP As String = Nothing
+
+            ' Resolves a host name or IP address to an IPHostEntry instance.
+            ' IPHostEntry - Provides a container class for Internet host address information. 
+            Dim _IPHostEntry As System.Net.IPHostEntry = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName())
+
+            ' IPAddress class contains the address of a computer on an IP network. 
+            For Each _IPAddress As System.Net.IPAddress In _IPHostEntry.AddressList
+                ' InterNetwork indicates that an IP version 4 address is expected 
+                ' when a Socket connects to an endpoint
+                If _IPAddress.AddressFamily.ToString() = "InterNetwork" Then
+                    _IP = _IPAddress.ToString()
+                End If
+            Next _IPAddress
+            Return _IP
+        Catch ex As Exception
+           
+        End Try
+    End Function
+    
+    
+    Function GetIP() As String
+        Try
+            Dim networkInterfaces() As NetworkInterface
+
+
+            networkInterfaces = NetworkInterface.GetAllNetworkInterfaces()
+
+            For Each networkInterface In networkInterfaces
+                If networkInterface.NetworkInterfaceType = NetworkInterfaceType.Ethernet Then
+                    For Each address In networkInterface.GetIPProperties().UnicastAddresses
+                        If address.Address.AddressFamily = Net.Sockets.AddressFamily.InterNetwork Then
+                            Return address.Address.ToString()
+                        End If
+                    Next address
+                End If
+            Next networkInterface
+
+            Return Nothing
+        Catch ex As Exception
+           
+        End Try
+    End Function
